@@ -195,6 +195,51 @@ form ul li {
     display: inline-block;
 }
 
+
+.empty-state {
+    margin-top: 60px;
+    text-align: center;
+    color: #fff;
+    opacity: 0.9;
+}
+
+.empty-state .icon {
+    font-size: 48px;
+    margin-bottom: 10px;
+}
+
+.empty-state h2 {
+    font-size: 22px;
+    margin-bottom: 6px;
+}
+
+.empty-state p {
+    font-size: 14px;
+    opacity: 0.8;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.logo:hover {
+    transform: translateY(-1px);
+    opacity: 0.9;
+}
+
+.logo-svg {
+    height: 42px;
+    width: auto;
+}
+
+.logo:active {
+    transform: scale(0.98);
+}
+
 /* responsive */
 @media (max-width: 800px) {
     .grid {

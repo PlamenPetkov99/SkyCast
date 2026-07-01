@@ -1,0 +1,88 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Weather Dashboard Version_1.0{% endblock %}
+
+{% block body %}
+
+    <div class="bg"></div>
+
+    <div class="container">
+
+        <header class="top">
+            <div class="logo">
+              <a href="{{ path('app_index') }}">
+                <img src="/logo/logo.svg" alt="weather icon">
+              </a>
+            </div>
+            <h1>Weather Dashboard Version 1.0</h1>
+            <p>Clean, fast weather overview</p>
+        </header>
+
+        <div class="search">
+            {{ form_start(form) }}
+            {{ form_widget(form.name, {'attr': {'placeholder': 'Search city...'}}) }}
+            {{ form_widget(form.submit) }}
+            <div class="form-error">
+                {{ form_errors(form.name) }}
+                {{ form_errors(form) }}
+            </div>
+            {{ form_end(form) }}
+        </div>
+        {% if weather %}
+            <section class="grid">
+                <div class="card main">
+                    <div class="city">{{ weather['geoCodeResponseDto'].getName() }}</div>
+                    <div class="temp">{{ weather['currentWeather'].getTemperature()|number_format(1) }}{{ weather['currentWeather'].getTemperatureUnit() }}</div>
+                    <div class="desc">{{ weather['currentWeather'].getWeatherDescription() }}</div>
+
+                    <div class="meta">
+                        <div>💨 {{ weather['currentWeather'].getWindSpeed()}} {{ weather['currentWeather'].getWindSpeedUnit() }}</div>
+                        <div>💧 {{ weather['currentWeather'].getRelativeHumidity() }}{{ weather['currentWeather'].getRelativeHumidityUnit() }}</div>
+                        <div>🌡️ {{ weather['currentWeather'].getApparentTemperature()|number_format(1) }}{{ weather['currentWeather'].getTemperatureUnit() }} feels</div>
+                    </div>
+                </div>
+
+                <div class="card small">
+                    <div class="label">Humidity</div>
+                    <div class="value">{{ weather['currentWeather'].getRelativeHumidity() }}{{ weather['currentWeather'].getRelativeHumidityUnit() }}</div>
+                </div>
+
+                <div class="card small">
+                    <div class="label">Wind</div>
+                    <div class="value">{{ weather['currentWeather'].getWindSpeed() }} {{ weather['currentWeather'].getWindSpeedUnit() }}</div>
+                </div>
+
+                <div class="card small">
+                    <div class="label">Pressure</div>
+                    <div class="value">{{ weather['currentWeather'].getSurfacePressure() }} {{ weather['currentWeather'].getSurfacePressureUnit() }}</div>
+                </div>
+
+            </section>
+
+            <section class="forecast">
+                <h2>5 Day Forecast</h2>
+
+                <div class="forecast-grid">
+                    {% for day in weather['dailyWeatherForecast'].getDays() %}
+                        <div class="forecast-card">
+                            <div class="day">{{ day.getDate().format('D') }}</div>
+                            <div class="icon">
+                                <img src="/icons/{{ day.getIconName() }}" alt="weather icon">
+                            </div>
+                            <div class="temps">{{ day.getTemperatureMax()|number_format(1) }}{{ day.getTemperatureUnit() }} / {{ day.getTemperatureMin()|number_format(1) }}{{ day.getTemperatureUnit() }}</div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+        {% else %}
+
+            <div class="empty-state">
+                <div class="icon">🌍</div>
+                <h2>Weather Dashboard</h2>
+                <p>Enter a city above to get real-time weather data and a 5-day forecast.</p>
+            </div>
+
+        {% endif %}
+    </div>
+
+{% endblock %}

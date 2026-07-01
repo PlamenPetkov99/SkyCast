@@ -240,6 +240,8 @@ form ul li {
     transform: scale(0.98);
 }
 
+
+
 /* responsive */
 @media (max-width: 800px) {
     .grid {

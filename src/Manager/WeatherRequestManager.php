@@ -39,7 +39,8 @@ class WeatherRequestManager
                         'wind_speed_10m_max',
                     ]),
                     'forecast_days' => 5,
-                    'timezone' => 'auto'
+                    'timezone' => 'auto',
+                    'models' => 'best_match'
                 ]
             ]
         );

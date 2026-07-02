@@ -34,6 +34,12 @@ final class IndexController extends AbstractController
 
     ){}
 
+    #[Route('/',name:'default')]
+    public function toIndex(): Response
+    {
+        return $this->redirectToRoute('app_index');
+    }
+
     #[Route('/index', name: 'app_index')]
     public function index(Request $request): Response
     {

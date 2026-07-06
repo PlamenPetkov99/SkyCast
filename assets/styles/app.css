@@ -240,19 +240,7 @@ form ul li {
     transform: scale(0.98);
 }
 
-.map-card {
-    margin-top: 30px;
-    margin-bottom: 30px;
-}
 
-.map-card h2 {
-    margin-bottom: 16px;
-}
-
-.map-card > div {
-    border-radius: 14px;
-    overflow: hidden;
-}
 
 /* responsive */
 @media (max-width: 800px) {

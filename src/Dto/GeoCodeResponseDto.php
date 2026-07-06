@@ -4,16 +4,16 @@ namespace App\Dto;
 
 class GeoCodeResponseDto
 {
-    private string $name = 'default';
-    private float $latitude = 0.0;
-    private float $longitude = 0.0;
-    private float $elevation = 0.0;
-    private string $feature_code = 'default';
-    private string $country_code = 'default';
-    private string $timezone = 'default';
-    private int $population = 0;
-    private array $postcodes = [];
-    private string $country = 'default';
+    private ?string $name = 'default';
+    private ?float $latitude = 0.0;
+    private ?float $longitude = 0.0;
+    private ?float $elevation = 0.0;
+    private ?string $feature_code = 'default';
+    private ?string $country_code = 'default';
+    private ?string $timezone = 'default';
+    private ?int $population = 0;
+    private ?array $postcodes = [];
+    private ?string $country = 'default';
 
     public function __construct(){}
 

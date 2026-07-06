@@ -11,6 +11,21 @@ class GeoCodeRequestManager
         private readonly HttpClientInterface $client
     ){}
 
+    public function reverse(float $latitude , float $longitude)
+    {
+        return $this->client->request(
+            'GET',
+            'https://api.bigdatacloud.net/data/reverse-geocode-client',
+            [
+                'query' => [
+                    'latitude' => $latitude,
+                    'longitude' => $longitude,
+                    'localityLanguage' => 'en'
+                ],
+            ]
+        );
+
+    }
     public function get(string $city){
         return $this->client->request(
             'GET',

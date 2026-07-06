@@ -4,9 +4,11 @@ namespace App\Controller;
 
 use App\Builder\CurrentWeatherBuilder;
 use App\Builder\DailyForecastBuilder;
+use App\Builder\GeoCodeResponseBuilder;
 use App\Dto\CityDto;
 use App\Dto\GeoCodeResponseDto;
 use App\Dto\GeoResponseDto;
+use App\Dto\ReversedGeoResponseDto;
 use App\Dto\WeatherResponseDto;
 use App\Form\SearchWeatherType;
 use App\Manager\GeoCodeRequestManager;
@@ -56,6 +58,10 @@ final class IndexController extends AbstractController
                 )
             )
         );
+
+        $lat = $request->query->get('lat');
+        $lng = $request->query->get('lng');
+
         if($form->isSubmitted() && $form->isValid()){
             $location = $this->geoCodeRequestManager->get($cityDto->getName());
             $geoResponseDto = $this->serializer->deserialize($location->getContent(), GeoResponseDto::class, 'json');
@@ -65,7 +71,6 @@ final class IndexController extends AbstractController
             }
             else{
                 $geoCodeResponseDto = $this->denormalizer->denormalize($geoResponseDto->getResults(), GeoCodeResponseDto::class,'array');
-
                 $weatherResponse = $this->weatherRequestManager->get($geoCodeResponseDto->getLatitude(), $geoCodeResponseDto->getLongitude());
                 $weatherResponseDto = $this->denormalizer->denormalize($weatherResponse->toArray(), WeatherResponseDto::class, 'array');
 
@@ -76,8 +81,28 @@ final class IndexController extends AbstractController
                 $weather['currentWeather'] = $currentWeather;
                 $weather['geoCodeResponseDto'] = $geoCodeResponseDto;
                 $weather['dailyWeatherForecast'] = $dailyWeatherForecast;
-
+                //populateWeather
             }
+        }
+        elseif ($lat !== null && $lng !== null){
+
+            $reversedLocation = $this->geoCodeRequestManager->reverse((float) $lat, (float) $lng);
+            $reversedGeoResponseDto = $this->denormalizer->denormalize($reversedLocation->toArray(), ReversedGeoResponseDto::class, 'array');
+
+            $geoCodeResponseDto = GeoCodeResponseBuilder::buildFromReverseGeo($reversedGeoResponseDto);
+
+            $weatherResponse = $this->weatherRequestManager->get($geoCodeResponseDto->getLatitude(), $geoCodeResponseDto->getLongitude());
+            $weatherResponseDto = $this->denormalizer->denormalize($weatherResponse->toArray(), WeatherResponseDto::class, 'array');
+
+            $currentWeather = CurrentWeatherBuilder::buildFromDto($weatherResponseDto);
+            $dailyWeatherForecast = DailyForecastBuilder::buildFromDto($weatherResponseDto);
+
+
+            $weather['currentWeather'] = $currentWeather;
+            $weather['geoCodeResponseDto'] = $geoCodeResponseDto;
+            $weather['dailyWeatherForecast'] = $dailyWeatherForecast;
+
+            $form->get('name')->setData($geoCodeResponseDto->getName());
 
         }
 
@@ -87,5 +112,15 @@ final class IndexController extends AbstractController
             'map' => $map
         ],
         new Response(null,200));
+    }
+
+    private function populateWeather(array &$weather, GeoCodeResponseDto $geoCodeResponseDto): void
+    {
+        $weatherResponse = $this->weatherRequestManager->get($geoCodeResponseDto->getLatitude(), $geoCodeResponseDto->getLongitude());
+        $weatherResponseDto = $this->denormalizer->denormalize($weatherResponse->toArray(), WeatherResponseDto::class, 'array');
+
+        $weather['currentWeather'] = CurrentWeatherBuilder::buildFromDto($weatherResponseDto);
+        $weather['geoCodeResponseDto'] = $geoCodeResponseDto;
+        $weather['dailyWeatherForecast'] = DailyForecastBuilder::buildFromDto($weatherResponseDto);
     }
 }

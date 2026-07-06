@@ -46,6 +46,7 @@
         "symfony/uid": "8.1.*",
         "symfony/ux-google-map": "*",
         "symfony/ux-leaflet-map": "^3.2",
+        "symfony/ux-live-component": "^3.2",
         "symfony/ux-map": "^3.2",
         "symfony/ux-turbo": "^3.2",
         "symfony/ux-twig-component": "^3.2",

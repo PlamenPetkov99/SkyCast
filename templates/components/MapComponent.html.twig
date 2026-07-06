@@ -1,0 +1,21 @@
+<div{{ attributes }}>
+    <input type="hidden" name="latitude" value="{{ weather['geoCodeResponseDto'].getLatitude() }}">
+    <input type="hidden" name="longitude" value="{{ weather['geoCodeResponseDto'].getLongitude() }}">
+    <input type="hidden" name="cityName" value="{{ weather['geoCodeResponseDto'].getName() }}">
+    <input type="hidden" name="temperature" value="{{ weather['currentWeather'].getTemperature() }}">
+    {{ ux_map(
+        center: [weather['geoCodeResponseDto'].getLatitude(), weather['geoCodeResponseDto'].getLongitude()],
+        zoom: 2,
+        markers: [
+            { position: [weather['geoCodeResponseDto'].getLatitude(), weather['geoCodeResponseDto'].getLongitude()],
+                title: weather['geoCodeResponseDto'].getName(),
+                infoWindow: {content: '<h3>' ~ weather['geoCodeResponseDto'].getName() ~ '</h3><p>Temperature: ' ~ weather['currentWeather'].getTemperature() ~ '°C</p>'}
+            },
+        ],
+        fitBoundsToMarkers: true,
+        attributes: {
+            class: 'dashboard-map',
+            style: 'width:100%; height:500px; border-radius:12px;'
+        }
+    ) }}
+</div>

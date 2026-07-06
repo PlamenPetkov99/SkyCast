@@ -31,20 +31,25 @@
             {{ form_end(form) }}
         </div>
         {% if weather %}
-
-            {{ ux_map(
-                center: [weather['geoCodeResponseDto'].getLatitude(), weather['geoCodeResponseDto'].getLongitude()],
-                zoom: 3,
-                markers: [
-                    { position: [weather['geoCodeResponseDto'].getLatitude(), weather['geoCodeResponseDto'].getLongitude()], title: weather['geoCodeResponseDto'].getName() },
-                ],
-                fitBoundsToMarkers: true,
-                attributes: {
-                    class: 'foo',
-                    style: 'height: 800px; width: 100%; border: 4px solid red; margin-block: 10vh;',
-                }
-            ) }}
-
+            <h2>Weather Map</h2>
+                <div class="card map-card">
+                    {{ ux_map(
+                        center: [weather['geoCodeResponseDto'].getLatitude(), weather['geoCodeResponseDto'].getLongitude()],
+                        zoom: 2,
+                        markers: [
+                            { position: [weather['geoCodeResponseDto'].getLatitude(), weather['geoCodeResponseDto'].getLongitude()],
+                                title: weather['geoCodeResponseDto'].getName(),
+                                infoWindow: {content: '<h3>' ~ weather['geoCodeResponseDto'].getName() ~ '</h3><p>Temperature: ' ~ weather['currentWeather'].getTemperature() ~ '°C</p>'}
+                            },
+                        ],
+                        fitBoundsToMarkers: true,
+                        attributes: {
+                            'data-controller': 'mymap',
+                            class: 'dashboard-map',
+                            style: 'width:100%; height:500px; border-radius:12px;'
+                        }
+                    ) }}
+                </div>
 
             <section class="grid">
                 <div class="card main">

@@ -35,14 +35,14 @@
                 <div class="card map-card">
                     {{ ux_map(
                         center: [weather['geoCodeResponseDto'].getLatitude(), weather['geoCodeResponseDto'].getLongitude()],
-                        zoom: 2,
+                        zoom: 12,
                         markers: [
                             { position: [weather['geoCodeResponseDto'].getLatitude(), weather['geoCodeResponseDto'].getLongitude()],
                                 title: weather['geoCodeResponseDto'].getName(),
                                 infoWindow: {content: '<h3>' ~ weather['geoCodeResponseDto'].getName() ~ '</h3><p>Temperature: ' ~ weather['currentWeather'].getTemperature() ~ '°C</p>'}
                             },
                         ],
-                        fitBoundsToMarkers: true,
+                        fitBoundsToMarkers: false,
                         attributes: {
                             'data-controller': 'mymap',
                             class: 'dashboard-map',

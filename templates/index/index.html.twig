@@ -18,6 +18,8 @@
             <p>Clean, fast weather overview</p>
         </header>
 
+        <turbo-frame id="the_frame_id">
+
         <div class="search">
             {{ form_start(form) }}
             {{ form_widget(form.name, {'attr': {'placeholder': 'Search city...'}}) }}
@@ -29,6 +31,21 @@
             {{ form_end(form) }}
         </div>
         {% if weather %}
+
+            {{ ux_map(
+                center: [weather['geoCodeResponseDto'].getLatitude(), weather['geoCodeResponseDto'].getLongitude()],
+                zoom: 3,
+                markers: [
+                    { position: [weather['geoCodeResponseDto'].getLatitude(), weather['geoCodeResponseDto'].getLongitude()], title: weather['geoCodeResponseDto'].getName() },
+                ],
+                fitBoundsToMarkers: true,
+                attributes: {
+                    class: 'foo',
+                    style: 'height: 800px; width: 100%; border: 4px solid red; margin-block: 10vh;',
+                }
+            ) }}
+
+
             <section class="grid">
                 <div class="card main">
                     <div class="city">{{ weather['geoCodeResponseDto'].getName() }}</div>
@@ -83,6 +100,8 @@
             </div>
 
         {% endif %}
+
+        </turbo-frame>
     </div>
 
 {% endblock %}

@@ -5,11 +5,9 @@ namespace App\Controller;
 use App\Builder\CurrentWeatherBuilder;
 use App\Builder\DailyForecastBuilder;
 use App\Dto\CityDto;
-use App\Dto\CurrentWeatherDto;
 use App\Dto\GeoCodeResponseDto;
 use App\Dto\GeoResponseDto;
 use App\Dto\WeatherResponseDto;
-use App\Entity\City;
 use App\Form\SearchWeatherType;
 use App\Manager\GeoCodeRequestManager;
 use App\Manager\WeatherRequestManager;
@@ -17,11 +15,14 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormError;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\ObjectMapper\ObjectMapperInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Symfony\UX\Map\Bridge\Leaflet\LeafletOptions;
+use Symfony\UX\Map\Bridge\Leaflet\Option\TileLayer;
+use Symfony\UX\Map\Map;
+use Symfony\UX\Map\Point;
 
 final class IndexController extends AbstractController
 {
@@ -47,7 +48,14 @@ final class IndexController extends AbstractController
         $form = $this->createForm(SearchWeatherType::class, $cityDto);
         $form->handleRequest($request);
         $weather = [];
-
+        $map = new Map('default')->fitBoundsToMarkers(true)->options(
+            new LeafletOptions()->tileLayer(
+                new TileLayer(
+                    url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+                )
+            )
+        );
         if($form->isSubmitted() && $form->isValid()){
             $location = $this->geoCodeRequestManager->get($cityDto->getName());
             $geoResponseDto = $this->serializer->deserialize($location->getContent(), GeoResponseDto::class, 'json');
@@ -68,12 +76,16 @@ final class IndexController extends AbstractController
                 $weather['currentWeather'] = $currentWeather;
                 $weather['geoCodeResponseDto'] = $geoCodeResponseDto;
                 $weather['dailyWeatherForecast'] = $dailyWeatherForecast;
+
             }
+
         }
 
         return $this->render('index/index.html.twig', [
             'form' => $form,
-            'weather' => $weather
-        ]);
+            'weather' => $weather,
+            'map' => $map
+        ],
+        new Response(null,200));
     }
 }

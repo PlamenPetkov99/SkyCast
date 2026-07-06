@@ -1,200 +1,165 @@
-# 🌦️ SkyCast - Weather Dashboard
+# 🌦️ SkyCast — Weather Dashboard v1.0
 
-A modern weather dashboard built with **Symfony 7**, providing real-time weather information and a 5-day forecast using the **Open-Meteo API**.
-
-The application demonstrates clean Symfony architecture with DTOs, service classes, builders, validation, and external API integration.
+SkyCast is a modern weather dashboard built with Symfony that provides real-time weather data, interactive maps, and a clean UI experience. It focuses on dynamic UX, fast responses, and modular architecture using Symfony components.
 
 ---
 
-## ✨ Features
+## 🚀 Features (Current Version)
 
-* 🔍 Search weather by city
-* 🌡️ Current weather conditions
-* 📅 5-day weather forecast
-* 💨 Wind speed
-* 💧 Relative humidity
-* 🌡️ Feels-like temperature
-* 🌍 Automatic geocoding from city name
-* 📱 Responsive modern UI
-* ⚠️ Validation and user-friendly error handling
+### 🌍 Interactive Weather Map
+- Symfony UX Map (Leaflet-based)
+- Click-to-select location
+- Draggable marker support
+- Controlled zoom behavior (no auto over-zoom)
+- Dynamic map rendering inside dashboard cards
 
 ---
 
-## 🛠️ Built With
-
-* PHP 8.3+
-* Symfony 7
-* Twig
-* Symfony Forms
-* Symfony Validator
-* Symfony Serializer
-* Symfony HttpClient
-* Open-Meteo Weather API
-* Open-Meteo Geocoding API
-* HTML5
-* CSS3
+### 🌦️ Weather Data System
+- Current weather conditions (temperature, humidity, wind, pressure)
+- 5-day forecast display
+- Weather descriptions and icons
+- “Feels like” temperature
+- Structured API responses via DTOs
 
 ---
 
-## 🏗️ Project Architecture
+### 📡 External API Integrations
+SkyCast integrates multiple third-party services:
 
-The application follows a layered architecture.
-
-```text
-Request
-    │
-    ▼
-Controller
-    │
-    ▼
-Symfony Form
-    │
-    ▼
-Validation
-    │
-    ▼
-GeoCodeRequestManager
-    │
-    ▼
-GeoResponseDto
-    │
-    ▼
-WeatherRequestManager
-    │
-    ▼
-WeatherResponseDto
-    │
-    ▼
-Builders
-    ├── CurrentWeatherBuilder
-    └── DailyForecastBuilder
-    │
-    ▼
-Twig Views
-```
-
-### Main Components
-
-* **Controllers** – Handle HTTP requests and orchestrate the workflow.
-* **Managers** – Communicate with external APIs.
-* **DTOs** – Represent API responses and application data.
-* **Builders** – Transform raw API responses into view-friendly objects.
-* **Forms** – Handle city search and validation.
-* **Twig** – Renders the frontend.
+- Open-Meteo Weather API (current + forecast + hourly data)
+- Open-Meteo Geocoding API (city search)
+- Reverse geocoding (fallback provider support for coordinates → city name)
 
 ---
 
-## 🚀 Installation
+### ⚙️ Backend Architecture
+- Symfony Controllers handle request flow
+- Service layer for weather & geocoding logic
+- DTOs for clean API response mapping
+- Validation for search inputs
+- Modular separation of concerns
 
-Clone the repository:
+---
 
-```bash
-git clone <repository-url>
-cd skycast
-```
+### ⚡ Frontend Interaction
+- Turbo Frames for partial page updates (no full reloads)
+- Stimulus controllers for map interaction
+- AJAX-like behavior via Symfony UX / Turbo
+- Dynamic marker updates
+- Real-time coordinate syncing between UI and backend
 
-Install dependencies:
+---
+
+### 🎨 UI / UX Design
+- Dark modern dashboard theme
+- Glassmorphism-style cards
+- Responsive grid layout
+- Smooth hover animations
+- Clean forecast visualization cards
+- Integrated map inside weather view
+
+---
+
+## 🗺️ Map System
+- Leaflet-based interactive map
+- Marker placement on click
+- Marker drag support
+- Controlled zoom (fixed zoom levels for stability)
+- Center synchronization with selected city
+
+---
+
+## 🔄 Application Flow
+
+User Action → System Flow:
+
+1. User searches city OR clicks map
+2. Controller receives coordinates or city name
+3. Geocoding service resolves location
+4. Weather service fetches API data
+5. DTO structures the response
+6. Twig renders dashboard UI
+7. Turbo Frame updates only necessary section
+
+---
+
+## 🧠 Core Concepts Used
+
+- DTO pattern for clean data handling
+- Service-oriented architecture
+- Separation of UI and business logic
+- Reactive UI updates (no full page reloads)
+- Symfony UX ecosystem integration
+- Minimal JavaScript approach (Stimulus only where needed)
+
+---
+
+## 📦 Planned Features
+
+### 🌦️ Hourly Forecast Expansion
+- Click on a daily forecast card
+- Expand into hourly breakdown view
+- Smooth UI animations (accordion/drawer style)
+- Uses already-fetched hourly API data (no extra requests)
+
+---
+
+### 👤 Authentication System
+- User registration & login
+- Personal dashboard per user
+- Save favorite cities
+- Tag system for locations (e.g. Home, Work, Travel)
+- Watchlist for weather monitoring
+
+---
+
+### 📍 GPS Location Feature
+- Detect user location on landing page
+- Automatically load nearest weather station
+- Permission-based geolocation
+- Fallback to manual search or map selection
+
+Recommended UX placement:
+- GPS feature integrated into landing page as primary CTA:
+  “Get weather near you instantly”
+
+---
+
+### ⚡ Performance Improvements
+- Redis caching layer (15 min TTL)
+- Grid-based caching for coordinates
+- Reduced API calls via caching strategy
+- Faster repeated searches for same locations
+
+---
+
+### 📊 Future Enhancements
+- Hourly temperature graphs (Chart.js)
+- Weather alerts system (storm/rain warnings)
+- Multi-city comparison view
+- Saved location dashboard
+- Animated weather transitions
+
+---
+
+## 🧪 Project Status
+
+Version: v1.0 (MVP+)
+
+- Weather dashboard fully functional
+- Interactive map system implemented
+- API integrations working
+- Turbo Frame dynamic updates
+- Clean UI/UX implemented
+- DTO-based backend architecture
+
+---
+
+## 🛠 Installation
 
 ```bash
 composer install
-```
-
-Configure your environment:
-
-```dotenv
-WEATHER_API_URL=https://api.open-meteo.com/v1/forecast
-GEOCODE_API_URL=https://geocoding-api.open-meteo.com/v1/search
-```
-
-Start the Symfony server:
-
-```bash
+npm install
+npm run dev
 symfony server:start
-```
-
-Open:
-
-```
-http://localhost:8000
-```
-
----
-
-## 📁 Project Structure
-
-```text
-src/
-├── Builder/
-├── Controller/
-├── Dto/
-├── Form/
-├── Manager/
-└── ...
-
-templates/
-public/
-config/
-```
-
----
-
-## 💡 Why No Database?
-
-This project intentionally does **not** use a database.
-
-The application retrieves live weather information directly from third-party APIs, making persistent storage unnecessary. The focus of the project is on:
-
-* API integration
-* Data transformation
-* DTO mapping
-* Symfony architecture
-* Clean frontend rendering
-
----
-
-## 📸 Screenshots
-
-> Add screenshots of:
->
-> * Home page
-> * Search results
-> * 5-day forecast
-> * Error handling
-
----
-
-## 🔮 Possible Future Improvements
-
-* User accounts
-* Favorite cities
-* Search history
-* Weather alerts
-* Hourly forecast
-* Caching API responses
-* Dark/Light theme
-* Multiple languages
-* Unit selection (°C / °F)
-* Progressive Web App (PWA)
-
----
-
-## 📚 What I Learned
-
-During this project I practiced:
-
-* Symfony Forms
-* DTO design
-* External API integration
-* HTTP Client
-* Serialization & Denormalization
-* Validation
-* Builder pattern
-* Clean architecture principles
-* Twig templating
-* Responsive UI development
-
----
-
-## 📄 License
-
-This project was created for educational and portfolio purposes.

@@ -31,7 +31,6 @@
             {{ form_end(form) }}
         </div>
         {% if weather %}
-            <h2>Weather Map</h2>
                 <div class="card map-card">
                     {{ ux_map(
                         center: [weather['geoCodeResponseDto'].getLatitude(), weather['geoCodeResponseDto'].getLongitude()],
@@ -46,9 +45,12 @@
                         attributes: {
                             'data-controller': 'mymap',
                             class: 'dashboard-map',
-                            style: 'width:100%; height:500px; border-radius:12px;'
+                            style: 'width:100%; height:550px; border-radius:12px;'
                         }
                     ) }}
+                    <div class="map-hint">
+                        📍 You can drag and drop the marker anywhere on the map to change location
+                    </div>
                 </div>
 
             <section class="grid">

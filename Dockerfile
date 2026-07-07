@@ -1,8 +1,8 @@
 FROM php:8.3-apache
 
 RUN apt-get update && apt-get install -y \
-    libzip-dev zip unzip libicu-dev \
-    && docker-php-ext-install zip intl
+    libzip-dev zip unzip libicu-dev libcurl4-openssl-dev libxml2-dev \
+    && docker-php-ext-install zip intl curl opcache
 
 RUN a2enmod rewrite
 
@@ -20,4 +20,3 @@ RUN php bin/console cache:clear --env=prod
 RUN chown -R www-data:www-data /var/www/html/var
 
 EXPOSE 80
-USER nobody

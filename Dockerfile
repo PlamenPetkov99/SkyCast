@@ -12,13 +12,12 @@ RUN apt-get update && apt-get install -y \
 RUN a2enmod rewrite
 
 # Set environment variables
-#ENV APACHE_DOCUMENT_ROOT /var/www/html/public
+ENV APACHE_DOCUMENT_ROOT /var/www/html/public
 ENV APP_ENV=prod
 ENV APP_DEBUG=0
 ENV COMPOSER_ALLOW_SUPERUSER=1
 
 # Adjust Apache configuration to use the public directory as document root
-ENV APACHE_DOCUMENT_ROOT /var/www/html/WeatherProject/WeatherApp/public
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 
@@ -38,8 +37,6 @@ RUN php bin/console cache:clear --env=prod
 
 # Set appropriate permissions for the web server
 RUN chown -R www-data:www-data /var/www/html
-RUN chown -R www-data:www-data /var/www/html/WeatherProject/WeatherApp/var
-RUN chown -R www-data:www-data /var/www/html/WeatherProject/WeatherApp/public
 
 # Expose port 80
 EXPOSE 80

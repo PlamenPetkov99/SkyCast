@@ -26,7 +26,7 @@ body {
 
 /* layout */
 .container {
-    max-width: 1000px;
+    max-width: 1200px !important;
     margin: auto;
     padding: 40px 20px;
 }
@@ -252,6 +252,17 @@ form ul li {
 .map-card > div {
     border-radius: 14px;
     overflow: hidden;
+}
+
+.map-hint {
+    margin-top: 10px;
+    font-size: 12px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    text-align: center;
+    color: rgba(255, 255, 255, 0.7);
 }
 
 /* responsive */

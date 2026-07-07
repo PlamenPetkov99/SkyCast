@@ -1,8 +1,8 @@
 FROM php:8.3-apache
 
 RUN apt-get update && apt-get install -y \
-    libzip-dev zip unzip libicu-dev libcurl4-openssl-dev \
-    && docker-php-ext-install zip intl curl
+    libzip-dev zip unzip libicu-dev libcurl4-openssl-dev libpq-dev \
+    && docker-php-ext-install zip intl curl pdo_pgsql
 
 RUN a2enmod rewrite
 
@@ -14,7 +14,7 @@ COPY . /var/www/html
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 ENV COMPOSER_ALLOW_SUPERUSER=1
-RUN composer install --no-dev --optimize-autoloader
+RUN composer install --no-dev --optimize-autoloader --ignore-platform-req=ext-pdo_pgsql
 
 RUN php bin/console cache:clear --env=prod
 RUN chown -R www-data:www-data /var/www/html/var

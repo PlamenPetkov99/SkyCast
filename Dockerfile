@@ -1,8 +1,8 @@
 FROM php:8.3-apache
 
 RUN apt-get update && apt-get install -y \
-    libzip-dev zip unzip libicu-dev libcurl4-openssl-dev libxml2-dev \
-    && docker-php-ext-install zip intl curl opcache
+    libzip-dev zip unzip libicu-dev libcurl4-openssl-dev \
+    && docker-php-ext-install zip intl curl
 
 RUN a2enmod rewrite
 

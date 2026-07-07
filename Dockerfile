@@ -25,6 +25,6 @@ RUN composer install --no-dev --optimize-autoloader
 RUN php bin/console asset-map:compile --env=prod
 
 RUN php bin/console cache:clear --env=prod
-RUN chown -R www-data:www-data /var/www/html/var
+RUN chown -R www-data:www-data /var/www/html
 
 EXPOSE 80

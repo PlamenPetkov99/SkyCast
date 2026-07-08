@@ -91,7 +91,7 @@
                         <div class="forecast-card">
                             <div class="day">{{ day.getDate().format('D') }}</div>
                             <div class="icon">
-                                <img src="/icons/{{ day.getIconName() }}" alt="weather icon">
+                                <img src="/weather-icons/{{ day.getIconName() }}" alt="weather icon">
                             </div>
                             <div class="temps">{{ day.getTemperatureMax()|number_format(1) }}{{ day.getTemperatureUnit() }} / {{ day.getTemperatureMin()|number_format(1) }}{{ day.getTemperatureUnit() }}</div>
                         </div>

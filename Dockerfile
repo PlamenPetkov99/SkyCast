@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Enable Apache modules
-RUN a2enmod rewrite && a2enmod headers && a2dismod autoindex
+RUN a2enmod rewrite && a2enmod headers
 
 # Set environment variables
 ENV APACHE_DOCUMENT_ROOT /var/www/html/public

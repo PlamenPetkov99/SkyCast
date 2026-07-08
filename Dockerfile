@@ -21,26 +21,16 @@ ENV COMPOSER_ALLOW_SUPERUSER=1
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 
-# Allow .htaccess overrides in public directory
-RUN echo '<Directory /var/www/html/public>' >> /etc/apache2/apache2.conf \
-    && echo '    AllowOverride All' >> /etc/apache2/apache2.conf \
-    && echo '    Require all granted' >> /etc/apache2/apache2.conf \
-    && echo '</Directory>' >> /etc/apache2/apache2.conf
-
-# Set SVG MIME type globally
-RUN echo 'AddType image/svg+xml .svg' >> /etc/apache2/apache2.conf
+# Allow .htaccess overrides and set SVG MIME type
+RUN echo '<Directory /var/www/html/public>' >> /etc/apache2/apache2.conf && \
+    echo '    AllowOverride All' >> /etc/apache2/apache2.conf && \
+    echo '    Require all granted' >> /etc/apache2/apache2.conf && \
+    echo '</Directory>' >> /etc/apache2/apache2.conf && \
+    echo 'AddType image/svg+xml .svg' >> /etc/apache2/apache2.conf
 
 # Copy application source code
 COPY . /var/www/html
 WORKDIR /var/www/html
-
-# Create .htaccess for icons directory to prevent rewrites and ensure proper serving
-RUN mkdir -p /var/www/html/public/icons && \
-    echo 'RewriteEngine Off' > /var/www/html/public/icons/.htaccess && \
-    echo 'AddType image/svg+xml .svg' >> /var/www/html/public/icons/.htaccess && \
-    echo '<IfModule mod_headers.c>' >> /var/www/html/public/icons/.htaccess && \
-    echo '    Header set Cache-Control "public, max-age=31536000"' >> /var/www/html/public/icons/.htaccess && \
-    echo '</IfModule>' >> /var/www/html/public/icons/.htaccess
 
 # Copy Composer and install PHP dependencies
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer

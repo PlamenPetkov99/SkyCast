@@ -8,8 +8,8 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-enable redis \
     && rm -rf /var/lib/apt/lists/*
 
-# Enable Apache rewrite module
-RUN a2enmod rewrite
+# Enable Apache modules
+RUN a2enmod rewrite headers mods_mime
 
 # Set environment variables
 ENV APACHE_DOCUMENT_ROOT /var/www/html/public
@@ -27,11 +27,18 @@ RUN echo '<Directory /var/www/html/public>' >> /etc/apache2/apache2.conf \
     && echo '    Require all granted' >> /etc/apache2/apache2.conf \
     && echo '</Directory>' >> /etc/apache2/apache2.conf
 
+# Configure SVG MIME type and add proper headers for static assets
+RUN echo '<FilesMatch "\.svg$">' >> /etc/apache2/apache2.conf \
+    && echo '    Header set Content-Type "image/svg+xml"' >> /etc/apache2/apache2.conf \
+    && echo '    Header set Cache-Control "public, max-age=3600"' >> /etc/apache2/apache2.conf \
+    && echo '</FilesMatch>' >> /etc/apache2/apache2.conf
+
 # Add Alias for /icons to explicitly serve SVGs
 RUN echo 'Alias /icons/ /var/www/html/public/icons/' >> /etc/apache2/sites-available/000-default.conf \
     && echo '<Directory /var/www/html/public/icons/>' >> /etc/apache2/sites-available/000-default.conf \
     && echo '    Options Indexes FollowSymLinks' >> /etc/apache2/sites-available/000-default.conf \
     && echo '    Require all granted' >> /etc/apache2/sites-available/000-default.conf \
+    && echo '    AddType image/svg+xml .svg' >> /etc/apache2/sites-available/000-default.conf \
     && echo '</Directory>' >> /etc/apache2/sites-available/000-default.conf
 
 # Copy application source code
@@ -53,3 +60,4 @@ RUN chown -R www-data:www-data /var/www/html
 
 # Expose port 80
 EXPOSE 80
+EOF

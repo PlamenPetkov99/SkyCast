@@ -27,6 +27,13 @@ RUN echo '<Directory /var/www/html/public>' >> /etc/apache2/apache2.conf \
     && echo '    Require all granted' >> /etc/apache2/apache2.conf \
     && echo '</Directory>' >> /etc/apache2/apache2.conf
 
+# Add Alias for /icons to explicitly serve SVGs
+RUN echo 'Alias /icons/ /var/www/html/public/icons/' >> /etc/apache2/sites-available/000-default.conf \
+    && echo '<Directory /var/www/html/public/icons/>' >> /etc/apache2/sites-available/000-default.conf \
+    && echo '    Options Indexes FollowSymLinks' >> /etc/apache2/sites-available/000-default.conf \
+    && echo '    Require all granted' >> /etc/apache2/sites-available/000-default.conf \
+    && echo '</Directory>' >> /etc/apache2/sites-available/000-default.conf
+
 # Copy application source code
 COPY . /var/www/html
 WORKDIR /var/www/html

@@ -2,42 +2,25 @@
 
 namespace App\Controller;
 
-use App\Builder\CurrentWeatherBuilder;
-use App\Builder\CurrentWeatherUnitsBuilder;
-use App\Builder\DailyForecastBuilder;
-use App\Builder\DailyForecastUnitBuilder;
-use App\Builder\GeoCodeViewBuilder;
-use App\Builder\RequestInputDataDtoBuilder;
 use App\Dto\CityDto;
-use App\Dto\GeoResponseDto;
-use App\Dto\WeatherDto;
+use App\Exception\CityNotFoundException;
 use App\Form\SearchWeatherType;
-use App\Manager\GeoCodeRequestManager;
 use App\Manager\MapManager;
-use App\Manager\ReverseGeoCodeRequestManager;
-use App\Manager\WeatherRequestManager;
-use App\Trait\Parser;
-use App\ViewModel\GeoCodeViewModel;
-use App\ViewModel\WeatherViewModel;
+use App\Service\GeoService;
+use App\Service\WeatherService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormError;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
-use Symfony\Contracts\HttpClient\ResponseInterface;
 
 final class IndexController extends AbstractController
 {
-    use Parser;
     public function __construct(
-        private readonly GeoCodeRequestManager $geoCodeRequestManager,
-        private readonly ValidatorInterface $validator,
-        private readonly WeatherRequestManager $weatherRequestManager,
         private readonly MapManager $mapManager,
-        private readonly RequestInputDataDtoBuilder $requestInputDataDtoBuilder,
-        private readonly ReverseGeoCodeRequestManager $reverseGeoCodeRequestManager,
+        private readonly GeoService $geoService,
+        private readonly WeatherService $weatherService,
     ){}
 
     #[Route('/', name: 'app_index')]
@@ -52,55 +35,21 @@ final class IndexController extends AbstractController
         $form->handleRequest($request);
         $weather = null;
 
-        if($form->isSubmitted() && $form->isValid()){
+        if($form->isSubmitted() && $form->isValid()){ //fetch by city
 
-            $location = $this->geoCodeRequestManager->get(
-                $this->requestInputDataDtoBuilder
-                    ->withCity($cityDto->getName())
-                    ->build()
-            );
+            try {
+                $geoCodeView = $this->geoService->findByCity($cityDto);
 
-            $geoResponseDto = $this->parseFromJson($location->getContent(), GeoResponseDto::class);
-
-            $errors = $this->validator->validate($geoResponseDto);
-            if (count($errors) > 0) {
-                $form->addError(new FormError('Error finding the city'));
-            }
-            else{
-
-                $geoCodeView = $this->parseFromArray($geoResponseDto->getResults(), GeoCodeViewModel::class);
-
-                $weatherResponse = $this->fetchWeather($geoCodeView);
-
-
-                $weatherDto = $this->parseFromArray($weatherResponse->toArray(), WeatherDto::class);
-
-                $weather = $this->buildWeather(
-                    $geoCodeView,
-                    $weatherDto
-                );
-
+                $weather = $this->weatherService->getWeather($geoCodeView);
+            } catch (CityNotFoundException $e) {
+                $form->addError(new FormError($e->getMessage()));
             }
         }
-        elseif ($lat !== null && $lng !== null){
+        elseif ($lat !== null && $lng !== null){ //fetch by lat and lng
 
-            $reversedLocation = $this->reverseGeoCodeRequestManager->get(
-                $this->requestInputDataDtoBuilder
-                ->withLatitude($lat)
-                ->withLongtitude($lng)
-                ->build()
-            );
+            $geoCodeView = $this->geoService->findByCoordinates($lat,$lng);
 
-            $geoCodeView = GeoCodeViewBuilder::build($reversedLocation->toArray());
-
-            $weatherResponse = $this->fetchWeather($geoCodeView);
-
-            $weatherDto = $this->parseFromArray($weatherResponse->toArray(), WeatherDto::class);
-
-            $weather = $this->buildWeather(
-                $geoCodeView,
-                $weatherDto
-            );
+            $weather = $this->weatherService->getWeather($geoCodeView);
 
             $form->get('name')->setData($geoCodeView->getName());
         }
@@ -109,30 +58,7 @@ final class IndexController extends AbstractController
             'form' => $form,
             'weather' => $weather,
             'map' => $this->mapManager->buildMap(),
-        ],
-        new Response(null,200));
+        ], new Response(null,200));
     }
 
-    private function fetchWeather(GeoCodeViewModel $geoCodeViewModel): ResponseInterface
-    {
-        return $this->weatherRequestManager->get(
-            $this->requestInputDataDtoBuilder
-                ->withLatitude($geoCodeViewModel->getLatitude())
-                ->withLongtitude($geoCodeViewModel->getLongitude())
-                ->build()
-        );
-    }
-
-    private function buildWeather(
-        GeoCodeViewModel $geoCodeViewModel,
-        WeatherDto $weatherDto
-    ): WeatherViewModel
-    {
-        return new WeatherViewModel()
-            ->setGeoCodeViewModel($geoCodeViewModel)
-            ->setDailyForecastUnitsDto(DailyForecastUnitBuilder::build($weatherDto))
-            ->setDailyForecastDto(DailyForecastBuilder::build($weatherDto))
-            ->setCurrentWeatherUnitsDto(CurrentWeatherUnitsBuilder::build($weatherDto))
-            ->setCurrentWeatherDto(CurrentWeatherBuilder::build($weatherDto));
-    }
 }

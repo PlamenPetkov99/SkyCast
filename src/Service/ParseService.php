@@ -1,26 +1,16 @@
 <?php
 
-namespace App\Trait;
+namespace App\Service;
 
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 use Symfony\Component\Serializer\SerializerInterface;
-use Symfony\Contracts\Service\Attribute\Required;
 
-trait Parser
+class ParseService
 {
-    private readonly DenormalizerInterface $denormalizer;
-    private readonly SerializerInterface $serializer;
-    #[Required]
-    public function setSerializer(SerializerInterface $serializer): void
-    {
-        $this->serializer = $serializer;
-    }
-
-    #[Required]
-    public function setDenormalizer(DenormalizerInterface $denormalizer): void
-    {
-        $this->denormalizer = $denormalizer;
-    }
+    public function __construct(
+        private readonly DenormalizerInterface $denormalizer,
+        private readonly SerializerInterface $serializer,
+    ){}
 
     public function parseFromJson
     (
@@ -39,6 +29,4 @@ trait Parser
     {
         return $this->denormalizer->denormalize($arrayInput, $to,'array');
     }
-
-
 }

@@ -60,5 +60,4 @@ final class IndexController extends AbstractController
             'map' => $this->mapManager->buildMap(),
         ], new Response(null,200));
     }
-
 }

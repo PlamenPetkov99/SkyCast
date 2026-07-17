@@ -3,124 +3,136 @@
 namespace App\Controller;
 
 use App\Builder\CurrentWeatherBuilder;
+use App\Builder\CurrentWeatherUnitsBuilder;
 use App\Builder\DailyForecastBuilder;
-use App\Builder\GeoCodeResponseBuilder;
+use App\Builder\DailyForecastUnitBuilder;
+use App\Builder\GeoCodeViewBuilder;
+use App\Builder\RequestInputDataDtoBuilder;
 use App\Dto\CityDto;
-use App\Dto\GeoCodeResponseDto;
 use App\Dto\GeoResponseDto;
-use App\Dto\ReversedGeoResponseDto;
-use App\Dto\WeatherResponseDto;
+use App\Dto\WeatherDto;
 use App\Form\SearchWeatherType;
 use App\Manager\GeoCodeRequestManager;
+use App\Manager\MapManager;
+use App\Manager\ReverseGeoCodeRequestManager;
 use App\Manager\WeatherRequestManager;
+use App\Trait\Parser;
+use App\ViewModel\GeoCodeViewModel;
+use App\ViewModel\WeatherViewModel;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormError;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
-use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
-use Symfony\UX\Map\Bridge\Leaflet\LeafletOptions;
-use Symfony\UX\Map\Bridge\Leaflet\Option\TileLayer;
-use Symfony\UX\Map\Map;
-use Symfony\UX\Map\Point;
+use Symfony\Contracts\HttpClient\ResponseInterface;
 
 final class IndexController extends AbstractController
 {
+    use Parser;
     public function __construct(
         private readonly GeoCodeRequestManager $geoCodeRequestManager,
-        private readonly SerializerInterface $serializer,
         private readonly ValidatorInterface $validator,
-        private readonly DenormalizerInterface $denormalizer,
         private readonly WeatherRequestManager $weatherRequestManager,
-
+        private readonly MapManager $mapManager,
+        private readonly RequestInputDataDtoBuilder $requestInputDataDtoBuilder,
+        private readonly ReverseGeoCodeRequestManager $reverseGeoCodeRequestManager,
     ){}
 
-    #[Route('/',name:'default')]
-    public function toIndex(): Response
-    {
-        return $this->redirectToRoute('app_index');
-    }
-
-    #[Route('/index', name: 'app_index')]
-    public function index(Request $request): Response
+    #[Route('/', name: 'app_index')]
+    public function index(
+        Request $request,
+        #[MapQueryParameter] ?float $lat,
+        #[MapQueryParameter] ?float $lng,
+    ): Response
     {
         $cityDto = new CityDto();
         $form = $this->createForm(SearchWeatherType::class, $cityDto);
         $form->handleRequest($request);
-        $weather = [];
-        $map = new Map('default')->fitBoundsToMarkers(true)->options(
-            new LeafletOptions()->tileLayer(
-                new TileLayer(
-                    url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-                )
-            )
-        );
-
-        $lat = $request->query->get('lat');
-        $lng = $request->query->get('lng');
+        $weather = null;
 
         if($form->isSubmitted() && $form->isValid()){
-            $location = $this->geoCodeRequestManager->get($cityDto->getName());
-            $geoResponseDto = $this->serializer->deserialize($location->getContent(), GeoResponseDto::class, 'json');
+
+            $location = $this->geoCodeRequestManager->get(
+                $this->requestInputDataDtoBuilder
+                    ->withCity($cityDto->getName())
+                    ->build()
+            );
+
+            $geoResponseDto = $this->parseFromJson($location->getContent(), GeoResponseDto::class);
+
             $errors = $this->validator->validate($geoResponseDto);
             if (count($errors) > 0) {
                 $form->addError(new FormError('Error finding the city'));
             }
             else{
-                $geoCodeResponseDto = $this->denormalizer->denormalize($geoResponseDto->getResults(), GeoCodeResponseDto::class,'array');
-                $weatherResponse = $this->weatherRequestManager->get($geoCodeResponseDto->getLatitude(), $geoCodeResponseDto->getLongitude());
-                $weatherResponseDto = $this->denormalizer->denormalize($weatherResponse->toArray(), WeatherResponseDto::class, 'array');
 
-                $currentWeather = CurrentWeatherBuilder::buildFromDto($weatherResponseDto);
+                $geoCodeView = $this->parseFromArray($geoResponseDto->getResults(), GeoCodeViewModel::class);
 
-                $dailyWeatherForecast = DailyForecastBuilder::buildFromDto($weatherResponseDto);
+                $weatherResponse = $this->fetchWeather($geoCodeView);
 
-                $weather['currentWeather'] = $currentWeather;
-                $weather['geoCodeResponseDto'] = $geoCodeResponseDto;
-                $weather['dailyWeatherForecast'] = $dailyWeatherForecast;
-                //populateWeather
+
+                $weatherDto = $this->parseFromArray($weatherResponse->toArray(), WeatherDto::class);
+
+                $weather = $this->buildWeather(
+                    $geoCodeView,
+                    $weatherDto
+                );
+
             }
         }
         elseif ($lat !== null && $lng !== null){
 
-            $reversedLocation = $this->geoCodeRequestManager->reverse((float) $lat, (float) $lng);
-            $reversedGeoResponseDto = $this->denormalizer->denormalize($reversedLocation->toArray(), ReversedGeoResponseDto::class, 'array');
+            $reversedLocation = $this->reverseGeoCodeRequestManager->get(
+                $this->requestInputDataDtoBuilder
+                ->withLatitude($lat)
+                ->withLongtitude($lng)
+                ->build()
+            );
 
-            $geoCodeResponseDto = GeoCodeResponseBuilder::buildFromReverseGeo($reversedGeoResponseDto);
+            $geoCodeView = GeoCodeViewBuilder::build($reversedLocation->toArray());
 
-            $weatherResponse = $this->weatherRequestManager->get($geoCodeResponseDto->getLatitude(), $geoCodeResponseDto->getLongitude());
-            $weatherResponseDto = $this->denormalizer->denormalize($weatherResponse->toArray(), WeatherResponseDto::class, 'array');
+            $weatherResponse = $this->fetchWeather($geoCodeView);
 
-            $currentWeather = CurrentWeatherBuilder::buildFromDto($weatherResponseDto);
-            $dailyWeatherForecast = DailyForecastBuilder::buildFromDto($weatherResponseDto);
+            $weatherDto = $this->parseFromArray($weatherResponse->toArray(), WeatherDto::class);
 
+            $weather = $this->buildWeather(
+                $geoCodeView,
+                $weatherDto
+            );
 
-            $weather['currentWeather'] = $currentWeather;
-            $weather['geoCodeResponseDto'] = $geoCodeResponseDto;
-            $weather['dailyWeatherForecast'] = $dailyWeatherForecast;
-
-            $form->get('name')->setData($geoCodeResponseDto->getName());
-
+            $form->get('name')->setData($geoCodeView->getName());
         }
 
         return $this->render('index/index.html.twig', [
             'form' => $form,
             'weather' => $weather,
-            'map' => $map
+            'map' => $this->mapManager->buildMap(),
         ],
         new Response(null,200));
     }
 
-    private function populateWeather(array &$weather, GeoCodeResponseDto $geoCodeResponseDto): void
+    private function fetchWeather(GeoCodeViewModel $geoCodeViewModel): ResponseInterface
     {
-        $weatherResponse = $this->weatherRequestManager->get($geoCodeResponseDto->getLatitude(), $geoCodeResponseDto->getLongitude());
-        $weatherResponseDto = $this->denormalizer->denormalize($weatherResponse->toArray(), WeatherResponseDto::class, 'array');
+        return $this->weatherRequestManager->get(
+            $this->requestInputDataDtoBuilder
+                ->withLatitude($geoCodeViewModel->getLatitude())
+                ->withLongtitude($geoCodeViewModel->getLongitude())
+                ->build()
+        );
+    }
 
-        $weather['currentWeather'] = CurrentWeatherBuilder::buildFromDto($weatherResponseDto);
-        $weather['geoCodeResponseDto'] = $geoCodeResponseDto;
-        $weather['dailyWeatherForecast'] = DailyForecastBuilder::buildFromDto($weatherResponseDto);
+    private function buildWeather(
+        GeoCodeViewModel $geoCodeViewModel,
+        WeatherDto $weatherDto
+    ): WeatherViewModel
+    {
+        return new WeatherViewModel()
+            ->setGeoCodeViewModel($geoCodeViewModel)
+            ->setDailyForecastUnitsDto(DailyForecastUnitBuilder::build($weatherDto))
+            ->setDailyForecastDto(DailyForecastBuilder::build($weatherDto))
+            ->setCurrentWeatherUnitsDto(CurrentWeatherUnitsBuilder::build($weatherDto))
+            ->setCurrentWeatherDto(CurrentWeatherBuilder::build($weatherDto));
     }
 }
